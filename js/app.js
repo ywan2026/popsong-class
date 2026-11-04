@@ -1,6 +1,6 @@
-import { SONGS, songById } from "./songs.js?v=20261104b";
-import * as store from "./store.js?v=20261104b";
-import { $, $$, esc, STEPS, STEP_COLORS, mountWorksheet, computeStats, parseLyrics, levelOf, musicIndexOf, LEVELS } from "./worksheet.js?v=20261104b";
+import { SONGS, songById } from "./songs.js?v=20261104c";
+import * as store from "./store.js?v=20261104c";
+import { $, $$, esc, STEPS, STEP_COLORS, mountWorksheet, computeStats, parseLyrics, levelOf, musicIndexOf, LEVELS } from "./worksheet.js?v=20261104c";
 
 const ANIMALS = [
   { id: "dog", e: "🐶", n: "강아지", bg: "linear-gradient(145deg,#ffe2b0,#ffc56b)" },
@@ -12,7 +12,7 @@ const PREF = "popsong-class-pref";
 let pref = {}; try { pref = JSON.parse(localStorage.getItem(PREF) || "{}"); } catch (e) {}
 const savePref = () => { try { localStorage.setItem(PREF, JSON.stringify(pref)); } catch (e) {} };
 
-const S = { sid: null, profile: null, stats: {}, song: null, A: null, ws: null, sec: "A", dirty: false };
+const S = { sid: null, profile: null, stats: {}, song: null, A: null, ws: null, sec: "A", dirty: false, profDirty: false };
 
 /* ---------------- helpers ---------------- */
 let tt;
@@ -184,7 +184,7 @@ async function openSong(id, sec = "A") {
   try { [answers, lyrics] = await Promise.all([store.loadSong(S.sid, id), store.loadLyrics(id)]); }
   catch (e) { toast("불러오지 못했어요", "인터넷 연결을 확인하세요."); }
   loading(false);
-  S.song = s; S.A = answers || {}; S.dirty = false;
+  S.song = s; S.A = answers || {}; S.dirty = false; S.profDirty = false;
   document.body.dataset.wall = s.theme;
   const ns = $("#nowsong"); ns.innerHTML = `<div class="th" style="background:${s.cover.bg}">${s.cover.motif}</div><div><div class="t">${esc(s.title)}</div><div class="s">${esc(s.no)}</div></div>`;
   S.ws = mountWorksheet(s, { A: S.A, lyricsText: lyrics, onChange: queueSave });
@@ -200,33 +200,45 @@ function go(id) {
   $("#back").disabled = i === 0; $("#fwd").disabled = i === STEPS.length - 1;
   $("#wsWin .main").classList.toggle("f-mode", id === "F");
   $("#content").style.scrollBehavior = "auto"; $("#content").scrollTop = 0; $("#content").style.scrollBehavior = "";
-  queueSave(true);
+  // [쓰기 절감 1] 단계 이동만으로는 저장하지 않음 (실제 입력이 있을 때만 저장)
 }
 const step = d => { const i = STEPS.findIndex(s => s.id === S.sec), n = STEPS[i + d]; if (n) go(n.id); };
 $("#back").onclick = () => step(-1); $("#fwd").onclick = () => step(1);
 
 let saveT = null;
+// [쓰기 절감 2] 입력을 멈추고 6초 뒤에 저장 (기존 1.2초). 나가기·탭 숨김·로그아웃 때는 즉시 저장.
+const SAVE_DELAY = 6000;
 function queueSave(quiet) {
   if (!S.song) return;
-  S.dirty = true; if (!quiet) setStatus("저장 중…");
-  clearTimeout(saveT); saveT = setTimeout(flush, quiet ? 2500 : 1200);
+  S.dirty = true; S.profDirty = true; if (!quiet) setStatus("저장 중…");
+  clearTimeout(saveT); saveT = setTimeout(() => flush(false), SAVE_DELAY);
 }
-async function flush() {
+// [쓰기 절감 3] 평소 자동 저장은 답안 문서 1건만 씀.
+// 프로필(통계·음악 지수)은 곡을 닫을 때·탭을 숨길 때·로그아웃할 때(full=true)만 갱신.
+async function flush(full = false) {
   clearTimeout(saveT);
-  if (!S.song || !S.dirty) return;
-  S.dirty = false;
+  if (!S.song) return;
+  const needAns = S.dirty, needProf = full && S.profDirty;
+  if (!needAns && !needProf) return;
+  S.dirty = false; if (needProf) S.profDirty = false;
   const st = S.ws.stats(), id = S.song.id;
   const lite = { pct: st.pct, acc: st.acc, reflect: st.reflect, score: st.score, ok: st.ok, okTotal: st.okTotal, chars: st.chars, colored: st.colored, per: st.per, started: st.started, sec: S.sec, at: Date.now() };
   S.stats[id] = lite;
   const mi = musicIndexOf(SONGS, S.stats);
-  try { await store.saveSong(S.sid, id, JSON.parse(JSON.stringify(S.A)), lite, mi); setStatus(store.isLocal() ? "✓ 이 기기에 저장됨" : "☁︎ 저장됨"); }
-  catch (e) { console.error(e); S.dirty = true; setStatus("⚠ 저장 실패 · 다시 시도 중"); clearTimeout(saveT); saveT = setTimeout(flush, 5000); }
+  try {
+    await store.saveSong(S.sid, id, needAns ? JSON.parse(JSON.stringify(S.A)) : null, needProf ? lite : null, mi);
+    setStatus(store.isLocal() ? "✓ 이 기기에 저장됨" : "☁︎ 저장됨");
+  } catch (e) {
+    console.error(e);
+    if (needAns) S.dirty = true; if (needProf) S.profDirty = true;
+    setStatus("⚠ 저장 실패 · 다시 시도 중"); clearTimeout(saveT); saveT = setTimeout(() => flush(full), 5000);
+  }
 }
-window.addEventListener("beforeunload", e => { if (S.dirty) { flush(); e.preventDefault(); e.returnValue = ""; } });
-document.addEventListener("visibilitychange", () => { if (document.hidden) flush(); });
+window.addEventListener("beforeunload", e => { if (S.dirty || S.profDirty) { flush(true); if (S.dirty) { e.preventDefault(); e.returnValue = ""; } } });
+document.addEventListener("visibilitychange", () => { if (document.hidden) flush(true); });
 
 async function goHome() {
-  if (S.song) await flush();
+  if (S.song) await flush(true);
   S.song = null; document.body.dataset.wall = ""; renderLibrary(); show("musicWin"); $("#mContent").scrollTop = 0;
 }
 
@@ -248,9 +260,9 @@ function act(a) {
   else if (a === "prev") step(-1);
   else if (a === "next") step(1);
   else if (a === "score") openScore();
-  else if (a === "logout") confirmBox("로그아웃할까요?", "다음에 같은 학번·이름·비밀번호로 다시 로그인하면 이어서 할 수 있어요.", async () => { await flush(); await store.logout(); S.sid = null; S.song = null; showLogin(); });
+  else if (a === "logout") confirmBox("로그아웃할까요?", "다음에 같은 학번·이름·비밀번호로 다시 로그인하면 이어서 할 수 있어요.", async () => { await flush(true); await store.logout(); S.sid = null; S.song = null; showLogin(); });
   else if (a === "reset" && S.song) confirmBox(`'${S.song.title}' 답을 모두 지울까요?`, "이 곡에서 쓴 답과 정답 확인 기록이 모두 사라지고 되돌릴 수 없어요.", async () => {
-    Object.keys(S.A).forEach(k => delete S.A[k]); S.dirty = true; await flush(); openSong(S.song.id, "A"); });
+    Object.keys(S.A).forEach(k => delete S.A[k]); S.dirty = true; S.profDirty = true; await flush(true); openSong(S.song.id, "A"); });
 }
 document.addEventListener("click", e => {
   const g = e.target.closest("[data-go]"); if (g) { go(g.dataset.go); return; }
