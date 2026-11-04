@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>선생님 화면 · Pop Song Class</title>
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/music.css">
+<style>
+.tpage{max-width:1080px;margin:0 auto;padding:22px 28px 40px}
+.tpage h2{font-size:24px;margin:0 0 4px}
+.tabs{display:inline-flex;padding:2px;border-radius:8px;background:rgba(0,0,0,.07);gap:2px;margin:14px 0 16px}
+[data-theme="dark"] .tabs{background:rgba(255,255,255,.08)}
+.tabs button{border:0;background:none;padding:4px 16px;border-radius:6px;font-size:13px}
+.tabs button.on{background:var(--field);box-shadow:0 1px 2px rgba(0,0,0,.18);font-weight:600}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{font-size:11.5px;color:var(--text-2);font-weight:600;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--group)}
+.tbl td{padding:8px 10px;border-top:1px solid var(--line);vertical-align:middle}
+.tbl tr.r:hover td{background:rgba(10,132,255,.06);cursor:pointer}
+.tbl .tn{font-variant-numeric:tabular-nums;white-space:nowrap}
+.mini{display:inline-block;width:64px;height:6px;border-radius:3px;background:var(--line);overflow:hidden;vertical-align:middle;margin-right:6px}
+.mini i{display:block;height:100%;background:#34c759}
+.av{width:26px;height:26px;border-radius:50%;display:inline-grid;place-items:center;font-size:15px;background:var(--line)}
+.lyrbox{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.lyrbox textarea{width:100%;min-height:420px;font-family:var(--font);font-size:12.5px;line-height:1.55}
+.pvw{max-height:470px;overflow:auto;font-size:12.5px}
+.pvw table{width:100%;border-collapse:collapse}.pvw td{padding:4px 8px;border-top:1px solid var(--line);vertical-align:top}
+.pvw .n{color:var(--text-3);width:28px;text-align:right}
+.badge{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11.5px;font-weight:600}
+.badge.ok{background:rgba(52,199,89,.15);color:#1f9d45}.badge.no{background:rgba(255,59,48,.12);color:#d63027}
+.drawer{position:fixed;top:26px;right:0;bottom:0;width:min(560px,92vw);background:var(--win);box-shadow:-20px 0 50px rgba(0,0,0,.25);z-index:70;transform:translateX(105%);transition:transform .25s ease;display:flex;flex-direction:column}
+.drawer.show{transform:none}
+.drawer header{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.drawer header h3{margin:0;font-size:16px;flex:1}
+.drawer .body{flex:1;overflow:auto;padding:14px 18px}
+.ans{font-size:13px;line-height:1.55}
+.ans h4{margin:14px 0 6px;font-size:13px}
+.ans .q{color:var(--text-2);font-size:12px}
+.ans .a{white-space:pre-wrap;padding:4px 8px;border-radius:6px;background:var(--group);margin:2px 0 6px;min-height:22px}
+.ans .ok{color:#1f9d45}.ans .x{color:var(--text-3)}
+.gate{position:fixed;inset:0;display:grid;place-items:center;z-index:65}
+.gate .card{width:380px;background:var(--win);border-radius:14px;padding:26px;text-align:center;box-shadow:var(--shadow)}
+.gate .card p{color:var(--text-2);font-size:13px;line-height:1.6}
+.help{font-size:12.5px;color:var(--text-2);line-height:1.6}
+.help code{background:var(--group);padding:1px 5px;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="menubar">
+  <div class="logo">♪</div><div class="mi app">Pop Song Class · 선생님</div>
+  <div class="spacer"></div><div class="status" id="who"></div>
+  <div class="status"><a href="index.html" style="color:inherit">학생 화면 ↗</a></div>
+</div>
+
+<div class="gate" id="gate">
+  <div class="card">
+    <div style="font-size:42px">🧑‍🏫</div>
+    <h3 style="margin:8px 0 4px">선생님 화면</h3>
+    <p id="gateMsg">등록된 선생님 Google 계정으로 로그인하세요.</p>
+    <button class="pill" id="gLogin" style="padding:8px 20px">Google 계정으로 로그인</button>
+  </div>
+</div>
+
+<div class="window screen" id="tWin" style="display:none">
+  <main class="main">
+    <div class="toolbar"><div class="traffic" style="padding:0 8px 0 4px"><span></span><span></span><span></span></div>
+      <h1>학생 현황 · 가사 관리</h1><span id="localBadge"></span>
+      <button class="pill ghost" id="tLogout">로그아웃</button></div>
+    <div class="content"><div class="tpage">
+      <div class="tabs"><button data-tab="students" class="on">학생 현황</button><button data-tab="lyrics">가사 입력</button><button data-tab="help">설정 도움말</button></div>
+
+      <section data-pane="students">
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">
+          <input class="field" id="filter" placeholder="학번·이름 검색 (예: 307)" style="max-width:260px">
+          <span class="help" id="count"></span><span style="flex:1"></span>
+          <button class="pill ghost" id="refresh">새로고침</button><button class="pill" id="csv">CSV 내려받기</button>
+        </div>
+        <div class="group" style="max-height:calc(100vh - 230px);overflow:auto"><table class="tbl" id="tbl"></table></div>
+        <p class="help">행을 누르면 그 학생의 곡별 답안을 볼 수 있어요.</p>
+      </section>
+
+      <section data-pane="lyrics" style="display:none">
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">
+          <div class="tabs" id="songTabs" style="margin:0"></div><span style="flex:1"></span>
+          <span class="help" id="lyrState"></span><button class="pill" id="lyrSave">저장</button>
+        </div>
+        <div class="lyrbox">
+          <div><textarea class="area" id="lyrText" placeholder="한글 학습지의 가사 표를 복사해 붙여 넣으세요.&#10;&#10;인식하는 형식&#10;1) 번호 / 영어 / 해석 을 각각 한 줄씩&#10;2) 영어 | 해석&#10;3) 영어 [Tab] 해석"></textarea></div>
+          <div class="group pvw" id="lyrPrev"></div>
+        </div>
+        <p class="help">가사는 이 공개 저장소(GitHub)에는 올라가지 않고 Firebase에만 저장되어, 로그인한 학생에게만 보여요. 줄 수가 학습지와 같아야 해석 빈칸이 제자리에 들어가요.</p>
+      </section>
+
+      <section data-pane="help" style="display:none" class="help">
+        <h3>비밀번호를 잊어버린 학생</h3>
+        <p>Firebase 콘솔 → <b>Authentication → 사용자</b>에서 <code>학번@popsong.songrye.school</code> 계정을 삭제하세요. 학생이 같은 학번·이름으로 새 비밀번호를 정해 다시 로그인하면 기존 답안이 그대로 이어집니다.</p>
+        <h3>다른 이름으로 이미 등록된 학번</h3>
+        <p>Firestore → <code>students/학번</code> 문서의 <code>name</code>을 고치거나, 위 방법으로 계정과 문서를 지우세요.</p>
+        <h3>음악 지수 계산</h3>
+        <p>곡마다 완성도 50 + 정답(B~D 맞힌 비율) 30 + 감상 쓰기(A·G·H·I) 20 = 100점, 세 곡 평균이 음악 지수입니다. 레벨: 🎧 리스너(0) · 🎵 플레이어(25) · 🎤 싱어(50) · 🌟 스타(75) · 👑 레전드(90).</p>
+      </section>
+    </div></div>
+  </main>
+</div>
+
+<div class="drawer" id="drawer">
+  <header><div class="av" id="dAv"></div><h3 id="dTitle"></h3><div class="tabs" id="dSongs" style="margin:0"></div><button class="pill ghost" id="dClose">닫기</button></header>
+  <div class="body"><div class="ans" id="dBody"></div></div>
+</div>
+<div class="toast" id="toast"><div class="ico" style="background:#0a84ff">✓</div><div><b id="toastT"></b><span id="toastM"></span></div></div>
+<script type="module" src="js/teacher.js"></script>
+</body>
+</html>

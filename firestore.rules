@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 선생님 Google 계정 (js/firebase-config.js의 TEACHER_EMAILS와 같게)
+    function isTeacher() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email in ['dydnjsl2022@gmail.com'];
+    }
+    // 학생: 학번@popsong.songrye.school 계정으로 로그인한 본인만
+    function isStudent(sid) {
+      return request.auth != null
+        && request.auth.token.email == sid + '@popsong.songrye.school';
+    }
+
+    match /students/{sid} {
+      allow read, write: if isStudent(sid) || isTeacher();
+      match /songs/{song} {
+        allow read, write: if isStudent(sid) || isTeacher();
+      }
+    }
+
+    // 가사: 로그인한 사람만 읽기, 선생님만 쓰기
+    match /lyrics/{song} {
+      allow read: if request.auth != null;
+      allow write: if isTeacher();
+    }
+  }
+}

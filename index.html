@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pop Song Class · 송례중 3학년 영어</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23fa2d55'/><text x='50' y='70' font-size='60' text-anchor='middle' fill='white'>♪</text></svg>">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/music.css">
+</head>
+<body>
+
+<!-- ===== Menu bar ===== -->
+<div class="menubar" id="menubar">
+  <div class="logo">♪</div>
+  <div class="mi app">Pop Song Class</div>
+  <div class="mi" data-menu>파일
+    <div class="dropdown">
+      <button data-act="print" class="ws-only">PDF로 저장… <kbd>Ctrl P</kbd></button>
+      <hr class="ws-only">
+      <button data-act="reset" class="ws-only">이 곡의 답 모두 지우기…</button>
+      <button data-act="home">보관함으로 가기</button>
+    </div>
+  </div>
+  <div class="mi" data-menu>보기
+    <div class="dropdown">
+      <button data-act="theme">다크 모드 켜기/끄기</button>
+      <hr>
+      <button data-act="prev" class="ws-only">이전 단계 <kbd>Alt ←</kbd></button>
+      <button data-act="next" class="ws-only">다음 단계 <kbd>Alt →</kbd></button>
+    </div>
+  </div>
+  <div class="mi" data-menu>계정
+    <div class="dropdown">
+      <button data-act="profile">프로필 아이콘 바꾸기…</button>
+      <hr>
+      <button data-act="logout">로그아웃</button>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <div class="status" id="saveStatus"></div>
+  <div class="status" id="clock"></div>
+</div>
+
+<!-- ===== Login (lock screen) ===== -->
+<div class="login" id="login">
+  <div class="date" id="lkDate"></div>
+  <div class="time" id="lkTime"></div>
+  <div class="who">
+    <div class="bigav" id="lkAv">🎵</div>
+    <div class="appname">Pop Song Class</div>
+    <div class="mini-icons" id="lkIcons"></div>
+    <form class="lf" id="lkForm" autocomplete="off">
+      <input class="first" id="lkSid" inputmode="numeric" maxlength="5" placeholder="학번 5자리 (예: 30701)" autocomplete="off">
+      <input class="first" id="lkName" maxlength="12" placeholder="이름" autocomplete="off">
+      <input class="first" id="lkPin" type="password" inputmode="numeric" maxlength="6" placeholder="비밀번호 (숫자 6자리)" autocomplete="off">
+      <div class="confirm"><input id="lkPin2" type="password" inputmode="numeric" maxlength="6" placeholder="비밀번호 한 번 더" autocomplete="off"></div>
+      <button class="go" id="lkGo" type="submit" aria-label="로그인">→</button>
+    </form>
+    <div class="msg" id="lkMsg"></div>
+    <div class="hint" id="lkHint">처음 로그인하면 지금 입력한 비밀번호가 내 비밀번호가 돼요.<br>비밀번호를 잊어버리면 선생님께 말씀드리세요.</div>
+  </div>
+</div>
+
+<!-- ===== Music library window ===== -->
+<div class="window music screen" id="musicWin">
+  <aside class="sidebar">
+    <div class="traffic"><span></span><span></span><span></span></div>
+    <button class="me" data-act="profile">
+      <div class="avatar" id="mAvatar">?</div>
+      <div><div class="n" id="mName"></div><div class="s" id="mId"></div></div>
+    </button>
+    <nav class="nav">
+      <div class="grp">보관함</div>
+      <button data-lib="albums" class="active"><span class="ico" style="background:#fa2d55">♫</span><span class="lbl">앨범</span></button>
+      <button data-lib="mq"><span class="ico" style="background:linear-gradient(145deg,#ff9f0a,#ff375f)">★</span><span class="lbl">나의 음악 지수</span></button>
+      <div class="grp">학습지</div>
+      <div id="mSongs"></div>
+    </nav>
+  </aside>
+  <main class="main">
+    <div class="toolbar">
+      <h1 id="mTitle">보관함</h1>
+      <span id="localBadge"></span>
+    </div>
+    <div class="content" id="mContent"><div class="lib" id="lib"></div></div>
+  </main>
+</div>
+
+<!-- ===== Worksheet window ===== -->
+<div class="window screen" id="wsWin">
+  <aside class="sidebar">
+    <div class="traffic"><span></span><span></span><span></span></div>
+    <button class="me" data-act="profile">
+      <div class="avatar" id="avatar">?</div>
+      <div><div class="n" id="meName"></div><div class="s" id="meId"></div></div>
+    </button>
+    <div class="search">
+      <svg width="12" height="12" viewBox="0 0 16 16"><circle cx="6.5" cy="6.5" r="5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10.5 10.5L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <input id="search" placeholder="검색" autocomplete="off">
+    </div>
+    <div class="nowsong" id="nowsong"></div>
+    <nav class="nav" id="nav"></nav>
+  </aside>
+  <main class="main">
+    <div class="toolbar">
+      <button class="pill ghost" data-act="home" style="margin-right:4px">‹ 보관함</button>
+      <button class="tbtn" id="back" title="이전"><svg width="10" height="16" viewBox="0 0 10 16"><path d="M8 2L2 8l6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <button class="tbtn" id="fwd" title="다음"><svg width="10" height="16" viewBox="0 0 10 16"><path d="M2 2l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <h1 id="tbTitle"></h1>
+      <button class="pill" data-act="print">PDF로 저장</button>
+    </div>
+    <div class="content" id="content">
+      <div class="page" id="page">
+        <div class="paper-head">
+          <div class="l"><small id="pNoTitle"></small><h1 id="pTitle"></h1></div>
+          <table><tr><td class="h">ID</td><td class="h">No.</td><td class="h">Name</td></tr>
+          <tr><td id="pId">&nbsp;</td><td id="pNo">&nbsp;</td><td id="pName">&nbsp;</td></tr></table>
+        </div>
+        <div id="sections"></div>
+      </div>
+    </div>
+    <div class="hud no-print" id="hud" aria-label="붓 고르기">
+      <div class="hud-t">붓 고르기</div>
+      <div id="hudList"></div>
+      <div class="hud-sep"></div>
+      <button class="hb" data-brush="0"><span class="sw er">⌫</span>지우개</button>
+      <div class="hud-n">색을 고르고<br>가사 줄을 누르세요</div>
+    </div>
+  </main>
+</div>
+
+<!-- ===== Sheets ===== -->
+<div class="scrim" id="profileSheet">
+  <div class="sheet">
+    <div class="big" id="psBig">🎵</div>
+    <h3>프로필 아이콘</h3>
+    <p>마음에 드는 동물을 골라 보세요.</p>
+    <div class="icons" id="iconPick"></div>
+    <div class="btns"><button class="pill ghost" id="psCancel">취소</button><button class="pill" id="psOk">저장</button></div>
+  </div>
+</div>
+<div class="scrim" id="confirmSheet">
+  <div class="sheet">
+    <div class="big">⚠️</div>
+    <h3 id="cfTitle"></h3>
+    <p id="cfMsg"></p>
+    <div class="btns"><button class="pill ghost" id="cfNo">취소</button><button class="pill" id="cfYes">확인</button></div>
+  </div>
+</div>
+<div class="scrim" id="scoreSheet">
+  <div class="sheet wide">
+    <div class="big">🎼</div>
+    <h3>음악 지수는 이렇게 계산해요</h3>
+    <p>곡마다 <b>완성도 50점 + 정답(B~D) 30점 + 감상 쓰기 20점</b> = 100점.<br>세 곡 점수의 평균이 나의 음악 지수예요.</p>
+    <table class="brk" id="brk"></table>
+    <div class="levels" id="levels"></div>
+    <div class="btns"><button class="pill" id="scOk">닫기</button></div>
+  </div>
+</div>
+<div class="loading" id="loading"><div><span class="spinner"></span><span>불러오는 중…</span></div></div>
+<div class="toast" id="toast"><div class="ico" style="background:#0a84ff">✓</div><div><b id="toastT"></b><span id="toastM"></span></div></div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
