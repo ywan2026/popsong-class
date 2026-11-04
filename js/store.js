@@ -5,7 +5,7 @@
      students/{학번}/songs/{곡id}   : { answers:{...}, updatedAt }
      lyrics/{곡id}                  : { text, updatedAt }   ← 선생님만 쓰기
    ===================================================================== */
-import { firebaseConfig, TEACHER_EMAILS, STUDENT_EMAIL_DOMAIN } from "./firebase-config.js?v=20261104b";
+import { firebaseConfig, TEACHER_EMAILS, STUDENT_EMAIL_DOMAIN } from "./firebase-config.js?v=20261104c";
 
 const V = "10.12.2";
 const CDN = `https://www.gstatic.com/firebasejs/${V}`;
@@ -128,17 +128,24 @@ export async function loadSong(sid, song) {
     try { return JSON.parse(localStorage.getItem(cacheKey(sid, song)) || "{}"); } catch (x) { return {}; }
   }
 }
+// answers가 null이면 답안 문서는 건너뛰고, stats가 null이면 프로필 문서는 건너뜀 (쓰기 건수 절감)
 export async function saveSong(sid, song, answers, stats, musicIndex) {
   if (!fb) {
-    lsPatch(o => { const u = o.users[sid]; if (!u) return; u.songs = u.songs || {}; u.songs[song] = answers; u.stats = u.stats || {}; u.stats[song] = stats; u.musicIndex = musicIndex; });
+    lsPatch(o => { const u = o.users[sid]; if (!u) return; u.songs = u.songs || {}; if (answers) u.songs[song] = answers; if (stats) { u.stats = u.stats || {}; u.stats[song] = stats; u.musicIndex = musicIndex; } });
     return;
   }
-  try { localStorage.setItem(cacheKey(sid, song), JSON.stringify(answers)); } catch (e) {}
+  if (answers) { try { localStorage.setItem(cacheKey(sid, song), JSON.stringify(answers)); } catch (e) {} }
   const { f, db } = fb;
-  const batch = f.writeBatch(db);
-  batch.set(f.doc(db, "students", sid, "songs", song), { answers, updatedAt: f.serverTimestamp() });
-  batch.set(f.doc(db, "students", sid), { stats: { [song]: stats }, musicIndex, updatedAt: f.serverTimestamp() }, { merge: true });
-  await batch.commit();
+  if (answers && stats) {
+    const batch = f.writeBatch(db);
+    batch.set(f.doc(db, "students", sid, "songs", song), { answers, updatedAt: f.serverTimestamp() });
+    batch.set(f.doc(db, "students", sid), { stats: { [song]: stats }, musicIndex, updatedAt: f.serverTimestamp() }, { merge: true });
+    await batch.commit();
+  } else if (answers) {
+    await f.setDoc(f.doc(db, "students", sid, "songs", song), { answers, updatedAt: f.serverTimestamp() });
+  } else if (stats) {
+    await f.setDoc(f.doc(db, "students", sid), { stats: { [song]: stats }, musicIndex, updatedAt: f.serverTimestamp() }, { merge: true });
+  }
 }
 
 /* ---------- 가사 ---------- */
