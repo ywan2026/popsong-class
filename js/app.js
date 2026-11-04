@@ -1,6 +1,6 @@
-import { SONGS, songById } from "./songs.js";
-import * as store from "./store.js";
-import { $, $$, esc, STEPS, STEP_COLORS, mountWorksheet, computeStats, parseLyrics, levelOf, musicIndexOf, LEVELS } from "./worksheet.js";
+import { SONGS, songById } from "./songs.js?v=20261104b";
+import * as store from "./store.js?v=20261104b";
+import { $, $$, esc, STEPS, STEP_COLORS, mountWorksheet, computeStats, parseLyrics, levelOf, musicIndexOf, LEVELS } from "./worksheet.js?v=20261104b";
 
 const ANIMALS = [
   { id: "dog", e: "🐶", n: "강아지", bg: "linear-gradient(145deg,#ffe2b0,#ffc56b)" },

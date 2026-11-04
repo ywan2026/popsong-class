@@ -5,7 +5,7 @@
      students/{학번}/songs/{곡id}   : { answers:{...}, updatedAt }
      lyrics/{곡id}                  : { text, updatedAt }   ← 선생님만 쓰기
    ===================================================================== */
-import { firebaseConfig, TEACHER_EMAILS, STUDENT_EMAIL_DOMAIN } from "./firebase-config.js";
+import { firebaseConfig, TEACHER_EMAILS, STUDENT_EMAIL_DOMAIN } from "./firebase-config.js?v=20261104b";
 
 const V = "10.12.2";
 const CDN = `https://www.gstatic.com/firebasejs/${V}`;

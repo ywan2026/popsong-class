@@ -63,3 +63,6 @@ js/store.js         Firebase / 로컬 저장
 js/firebase-config.js  Firebase 설정값
 firestore.rules     보안 규칙
 ```
+
+## 수정한 뒤 배포할 때
+브라우저 캐시 때문에 예전 파일이 보일 수 있어요. 파일을 고치면 `index.html`, `teacher.html`, `js/*.js`의 `?v=20261104b` 값을 모두 새 값(예: 날짜)으로 바꿔 주세요.

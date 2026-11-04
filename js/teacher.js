@@ -1,6 +1,6 @@
-import { SONGS, songById } from "./songs.js";
-import * as store from "./store.js";
-import { $, $$, esc, STEPS, parseLyrics, levelOf } from "./worksheet.js";
+import { SONGS, songById } from "./songs.js?v=20261104b";
+import * as store from "./store.js?v=20261104b";
+import { $, $$, esc, STEPS, parseLyrics, levelOf } from "./worksheet.js?v=20261104b";
 
 const ICON = { dog: "🐶", cat: "🐱", rabbit: "🐰", bear: "🐻", penguin: "🐧" };
 let students = [], curSong = SONGS[0].id, drawerSid = null;
