@@ -140,3 +140,53 @@ body.in-ws hr.ws-only{display:block!important}
 .cover .t,.nowsong .t,.detail .meta h2{text-wrap:balance}
 .vcell .w{width:auto!important;min-width:72px;white-space:nowrap}
 .vcell .field{min-width:0}
+
+/* ===== 감상 어휘 분석 ===== */
+.ins-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.ins-tabs button,.seg-s button{border:0;background:var(--group);color:var(--text);padding:6px 12px;border-radius:999px;font-size:12.5px;box-shadow:inset 0 0 0 .5px var(--line)}
+.ins-tabs button.on,.seg-s button.on{background:#5e5ce6;color:#fff}
+.ins-meta{font-size:12.5px;color:var(--text-2);margin:0 2px 12px}
+.ins-card{background:var(--group);border-radius:14px;box-shadow:inset 0 0 0 .5px var(--line);padding:16px 18px;margin-bottom:16px}
+.ins-card h3{margin:0 0 2px;font-size:16px}
+.ins-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.seg-s{display:flex;gap:4px;flex-wrap:wrap}
+.ins-sub{font-size:12px;color:var(--text-2);margin:4px 0 10px}
+.ins-sub .ck{margin-left:8px;white-space:nowrap;cursor:pointer}
+.mine-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#ff375f;vertical-align:0}
+.ins-cloud{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 12px;padding:18px 10px;min-height:120px;border-radius:10px;background:rgba(94,92,230,.06)}
+.ins-w{border:0;background:none;color:#5e5ce6;font-weight:700;line-height:1.15;padding:2px 4px;border-radius:6px;letter-spacing:-.01em}
+.ins-w:hover{background:rgba(94,92,230,.12)}
+.ins-w.mine{color:#ff375f}
+.ins-w.on{background:#5e5ce6;color:#fff;opacity:1!important}
+[data-theme="dark"] .ins-w{color:#a5a3ff}[data-theme="dark"] .ins-w.mine{color:#ff6b8a}
+.ins-hint{font-size:12px;color:var(--text-3);margin-top:8px}
+.ins-detail{margin-top:10px;font-size:13px;padding:10px 12px;border-radius:10px;background:var(--field);box-shadow:inset 0 0 0 .5px var(--line)}
+.ins-songs{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px;font-size:12px;color:var(--text-2)}
+.tag{display:inline-block;border:0;font-size:11.5px;padding:2px 8px;border-radius:999px;background:rgba(0,0,0,.06);color:var(--text-2);margin:2px 3px 2px 6px}
+.tag.mine{background:rgba(255,55,95,.12);color:#ff375f}
+.ins-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.ins-grid .ins-card{margin-bottom:16px}
+.ins-bar{display:grid;grid-template-columns:20px 90px 1fr 38px;gap:8px;align-items:center;font-size:13px;margin:5px 0}
+.ins-bar .rk{color:var(--text-3);text-align:right;font-variant-numeric:tabular-nums}
+.ins-bar .lbl{border:0;background:none;text-align:left;padding:0;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ins-bar .v,.ins-mood .nums{white-space:nowrap;font-size:12px;color:var(--text-2);text-align:right;font-variant-numeric:tabular-nums}
+.ins-card .track{display:block;height:9px;border-radius:5px;background:rgba(0,0,0,.06);overflow:hidden;border:0;padding:0}
+[data-theme="dark"] .ins-card .track{background:rgba(255,255,255,.08)}
+.ins-card .track i{display:block;height:100%;border-radius:5px;background:#5e5ce6}
+.ins-only{margin-top:12px;font-size:12.5px}
+.ins-mood{display:grid;grid-template-columns:78px 1fr 62px 30px;gap:8px;align-items:center;font-size:12.5px;margin:6px 0}
+.ins-mood .m{font-weight:600}
+.ins-mood .pair{display:grid;gap:3px}
+.ins-mood .track{height:7px}
+.ins-mood i.b{background:#a1a1a6!important}.ins-mood i.a{background:#ff9f0a!important}
+.ins-mood .d{font-size:11.5px;text-align:right;color:var(--text-3)}.ins-mood .d.up{color:#34c759}.ins-mood .d.down{color:#ff375f}
+.lg{display:inline-block;width:10px;height:10px;border-radius:3px;vertical-align:-1px}.lg.b{background:#a1a1a6}.lg.a{background:#ff9f0a}
+.ins-lines{margin:0;padding-left:20px;font-size:13.5px}
+.ins-lines li{margin:6px 0}.ins-lines li.mine .q{color:#ff375f}
+.ins-lines .q{font-style:italic}.ins-lines .who{font-size:12px;color:var(--text-2);margin-left:8px}
+.ins-q{margin:10px 0}.ins-q .k{font-size:13px;margin-bottom:6px}
+.ins-q textarea{width:100%}
+.ins-save{display:flex;justify-content:flex-end;align-items:center;gap:10px;font-size:12.5px;color:var(--text-2)}
+.ins-empty{padding:30px;text-align:center;color:var(--text-2);font-size:13.5px}
+.spinner.dark{border-color:rgba(0,0,0,.15);border-top-color:#5e5ce6}
+@media (max-width:900px){.ins-grid{grid-template-columns:1fr}}

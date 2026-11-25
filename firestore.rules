@@ -21,6 +21,12 @@ service cloud.firestore {
       }
     }
 
+    // 감상 어휘 분석: 단어 개수·기분만 담긴 요약. 로그인한 사람 모두 읽기, 본인(또는 선생님)만 쓰기
+    match /vocab/{song}/students/{sid} {
+      allow read: if request.auth != null;
+      allow write: if isStudent(sid) || isTeacher();
+    }
+
     // 가사: 로그인한 사람만 읽기, 선생님만 쓰기
     match /lyrics/{song} {
       allow read: if request.auth != null;
