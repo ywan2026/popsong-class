@@ -1,6 +1,7 @@
-import { SONGS, songById } from "./songs.js?v=20261104c";
-import * as store from "./store.js?v=20261104c";
-import { $, $$, esc, STEPS, STEP_COLORS, mountWorksheet, computeStats, parseLyrics, levelOf, musicIndexOf, LEVELS } from "./worksheet.js?v=20261104c";
+import { SONGS, songById } from "./songs.js?v=20261125a";
+import * as store from "./store.js?v=20261125a";
+import { $, $$, esc, STEPS, STEP_COLORS, mountWorksheet, computeStats, parseLyrics, levelOf, musicIndexOf, LEVELS } from "./worksheet.js?v=20261125a";
+import { mountInsight, summarize, hasContent } from "./insight.js?v=20261125a";
 
 const ANIMALS = [
   { id: "dog", e: "🐶", n: "강아지", bg: "linear-gradient(145deg,#ffe2b0,#ffc56b)" },
@@ -113,7 +114,7 @@ $("#psOk").onclick = async () => {
 
 /* ---------------- library ---------------- */
 async function enterApp(sid, created) {
-  S.sid = sid; loading(true);
+  S.sid = sid; loading(true); Object.keys(pubKey).forEach(k => delete pubKey[k]);
   try { S.profile = (await store.loadProfile(sid)) || { sid, name: pref.lastName || "", icon: lkIcon }; }
   catch (e) { S.profile = { sid, name: pref.lastName || "", icon: lkIcon }; }
   if (!S.profile.icon && lkIcon && created) S.profile.icon = lkIcon;
@@ -154,6 +155,31 @@ function renderLibrary() {
       return `<button class="album" data-album="${s.id}">${coverHTML(s)}<div class="name">${esc(s.title)}</div><div class="art">${esc(s.album)}</div>
         <div class="pbar"><i style="width:${st.pct}%"></i></div><div class="pmeta"><span>${st.pct ? `${st.pct}% 완성` : "아직 시작 안 함"}</span><span>${st.score ? `${st.score}점` : ""}</span></div></button>`; }).join("")}</div>`;
 }
+/* ---------------- 감상 어휘 분석 ---------------- */
+const pubKey = {};   // 곡id → 마지막으로 공유한 요약(JSON) — 바뀐 게 없으면 다시 쓰지 않음
+async function publishMine(id, A) {
+  const sum = summarize(A || {}), k = JSON.stringify(sum);
+  if (pubKey[id] === k) return;
+  if (!hasContent(sum) && pubKey[id] === undefined) { pubKey[id] = k; return; }
+  await store.publishVocab(S.sid, id, sum); pubKey[id] = k;
+}
+// 이 기능이 생기기 전에 쓴 답도 반영되도록, 분석 화면을 열 때 내 답을 한 번 공유
+async function backfillMine(ids) {
+  await Promise.all(ids.filter(id => pubKey[id] === undefined && songStat(id).started).map(async id => {
+    try { await publishMine(id, await store.loadSong(S.sid, id)); } catch (e) { console.warn("vocab backfill", id, e); }
+  }));
+}
+function renderInsight() {
+  $("#mTitle").textContent = "감상 어휘 분석"; $$("#musicWin [data-lib]").forEach(b => b.classList.toggle("active", b.dataset.lib === "vocab"));
+  S.profile.explore = S.profile.explore || {};
+  mountInsight($("#lib"), {
+    songs: SONGS, sid: S.sid, explore: S.profile.explore,
+    load: async ids => { await backfillMine(ids); return store.listVocab(ids); },
+    saveExplore: async (key, ans) => { const ex = { ...S.profile.explore, [key]: ans }; await store.saveProfile(S.sid, { explore: ex }); }
+  });
+  $("#mContent").scrollTop = 0;
+}
+
 function renderAlbum(id) {
   const s = songById(id), st = songStat(id), per = st.per || {};
   $("#mTitle").textContent = s.title; $$("#musicWin [data-lib]").forEach(b => b.classList.remove("active"));
@@ -227,6 +253,7 @@ async function flush(full = false) {
   const mi = musicIndexOf(SONGS, S.stats);
   try {
     await store.saveSong(S.sid, id, needAns ? JSON.parse(JSON.stringify(S.A)) : null, needProf ? lite : null, mi);
+    if (needProf) publishMine(id, S.A).catch(e => console.warn("vocab publish", e));   // 곡을 닫을 때만 반 전체 요약 갱신
     setStatus(store.isLocal() ? "✓ 이 기기에 저장됨" : "☁︎ 저장됨");
   } catch (e) {
     console.error(e);
@@ -268,7 +295,7 @@ document.addEventListener("click", e => {
   const g = e.target.closest("[data-go]"); if (g) { go(g.dataset.go); return; }
   const o = e.target.closest("[data-open]"); if (o) { openSong(o.dataset.open, o.dataset.sec); return; }
   const al = e.target.closest("[data-album]"); if (al) { renderAlbum(al.dataset.album); return; }
-  const lb = e.target.closest("[data-lib]"); if (lb) { renderLibrary(); if (lb.dataset.lib === "mq") $("#mqCard").scrollIntoView({ behavior: "smooth", block: "start" }); else $("#mContent").scrollTop = 0; return; }
+  const lb = e.target.closest("[data-lib]"); if (lb) { if (lb.dataset.lib === "vocab") { renderInsight(); return; } renderLibrary(); if (lb.dataset.lib === "mq") $("#mqCard").scrollIntoView({ behavior: "smooth", block: "start" }); else $("#mContent").scrollTop = 0; return; }
   const a = e.target.closest("[data-act]"); if (a) { closeMenus(); act(a.dataset.act); return; }
   const m = e.target.closest("[data-menu]"); if (m) { const open = m.classList.contains("open"); closeMenus(); if (!open) m.classList.add("open"); return; }
   closeMenus();

@@ -5,7 +5,7 @@
      students/{학번}/songs/{곡id}   : { answers:{...}, updatedAt }
      lyrics/{곡id}                  : { text, updatedAt }   ← 선생님만 쓰기
    ===================================================================== */
-import { firebaseConfig, TEACHER_EMAILS, STUDENT_EMAIL_DOMAIN } from "./firebase-config.js?v=20261104c";
+import { firebaseConfig, TEACHER_EMAILS, STUDENT_EMAIL_DOMAIN } from "./firebase-config.js?v=20261125a";
 
 const V = "10.12.2";
 const CDN = `https://www.gstatic.com/firebasejs/${V}`;
@@ -146,6 +146,19 @@ export async function saveSong(sid, song, answers, stats, musicIndex) {
   } else if (stats) {
     await f.setDoc(f.doc(db, "students", sid), { stats: { [song]: stats }, musicIndex, updatedAt: f.serverTimestamp() }, { merge: true });
   }
+}
+
+/* ---------- 감상 어휘 분석 (반 전체 공유용 요약) ----------
+   vocab/{곡id}/students/{학번} : { sid, song, wb:{단어:개수}, wa:{…}, mb:[기분], ma:[기분], line, updatedAt }
+   문장은 저장하지 않고 단어 개수·기분 단어·마음에 남는 가사 한 줄만 저장 → 로그인한 학생 모두 읽기 가능 */
+export async function publishVocab(sid, song, sum) {
+  if (!fb) { lsPatch(o => { o.vocab = o.vocab || {}; o.vocab[song] = o.vocab[song] || {}; o.vocab[song][sid] = { sid, song, ...sum }; }); return; }
+  await fb.f.setDoc(fb.f.doc(fb.db, "vocab", song, "students", sid), { sid, song, ...sum, updatedAt: fb.f.serverTimestamp() });
+}
+export async function listVocab(songIds) {
+  if (!fb) { const v = lsGet().vocab || {}; return songIds.flatMap(id => Object.values(v[id] || {})); }
+  const all = await Promise.all(songIds.map(id => fb.f.getDocs(fb.f.collection(fb.db, "vocab", id, "students"))));
+  return all.flatMap((q, i) => q.docs.map(d => ({ ...d.data(), song: songIds[i] })));
 }
 
 /* ---------- 가사 ---------- */
